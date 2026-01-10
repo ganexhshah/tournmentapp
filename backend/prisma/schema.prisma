@@ -1,0 +1,369 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  username  String   @unique
+  password  String
+  firstName String?
+  lastName  String?
+  avatar    String?
+  phone     String?
+  isVerified Boolean @default(false)
+  isActive   Boolean @default(true)
+  role       Role    @default(USER)
+  
+  // Gaming profile
+  gamerTag    String?
+  level       Int     @default(1)
+  experience  Int     @default(0)
+  coins       Int     @default(0)
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  lastLogin DateTime?
+  
+  // Relations
+  profile       UserProfile?
+  teams         TeamMember[]
+  tournaments   TournamentParticipant[]
+  matches       MatchParticipant[]
+  transactions  Transaction[]
+  notifications Notification[]
+  rewards       UserReward[]
+  orders        Order[]
+  
+  @@map("users")
+}
+
+model UserProfile {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  bio          String?
+  country      String?
+  timezone     String?
+  dateOfBirth  DateTime?
+  preferences  Json?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("user_profiles")
+}
+
+model Team {
+  id          String @id @default(cuid())
+  name        String @unique
+  description String?
+  avatar      String?
+  isActive    Boolean @default(true)
+  maxMembers  Int     @default(5)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  members     TeamMember[]
+  tournaments TournamentTeam[]
+  
+  @@map("teams")
+}
+
+model TeamMember {
+  id     String @id @default(cuid())
+  teamId String
+  userId String
+  role   TeamRole @default(MEMBER)
+  
+  joinedAt DateTime @default(now())
+  
+  // Relations
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([teamId, userId])
+  @@map("team_members")
+}
+
+model Tournament {
+  id          String @id @default(cuid())
+  title       String
+  description String?
+  game        String
+  format      TournamentFormat
+  status      TournamentStatus @default(UPCOMING)
+  
+  maxParticipants Int
+  entryFee        Int      @default(0)
+  prizePool       Int      @default(0)
+  
+  startDate DateTime
+  endDate   DateTime?
+  
+  rules Json?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  participants TournamentParticipant[]
+  teams        TournamentTeam[]
+  matches      Match[]
+  
+  @@map("tournaments")
+}
+
+model TournamentParticipant {
+  id           String @id @default(cuid())
+  tournamentId String
+  userId       String
+  
+  registeredAt DateTime @default(now())
+  
+  // Relations
+  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([tournamentId, userId])
+  @@map("tournament_participants")
+}
+
+model TournamentTeam {
+  id           String @id @default(cuid())
+  tournamentId String
+  teamId       String
+  
+  registeredAt DateTime @default(now())
+  
+  // Relations
+  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  team       Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  
+  @@unique([tournamentId, teamId])
+  @@map("tournament_teams")
+}
+
+model Match {
+  id           String @id @default(cuid())
+  tournamentId String?
+  
+  title       String
+  game        String
+  status      MatchStatus @default(SCHEDULED)
+  round       Int?
+  
+  scheduledAt DateTime
+  startedAt   DateTime?
+  endedAt     DateTime?
+  
+  result Json?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  tournament   Tournament?         @relation(fields: [tournamentId], references: [id])
+  participants MatchParticipant[]
+  
+  @@map("matches")
+}
+
+model MatchParticipant {
+  id      String @id @default(cuid())
+  matchId String
+  userId  String
+  
+  score    Int?
+  position Int?
+  
+  // Relations
+  match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([matchId, userId])
+  @@map("match_participants")
+}
+
+model Transaction {
+  id     String @id @default(cuid())
+  userId String
+  
+  type        TransactionType
+  amount      Int
+  description String?
+  status      TransactionStatus @default(PENDING)
+  
+  metadata Json?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("transactions")
+}
+
+model Notification {
+  id     String @id @default(cuid())
+  userId String
+  
+  title   String
+  message String
+  type    NotificationType
+  isRead  Boolean @default(false)
+  
+  metadata Json?
+  
+  createdAt DateTime @default(now())
+  
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("notifications")
+}
+
+model Reward {
+  id          String @id @default(cuid())
+  title       String
+  description String?
+  type        RewardType
+  value       Int
+  
+  requirements Json?
+  isActive     Boolean @default(true)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  userRewards UserReward[]
+  
+  @@map("rewards")
+}
+
+model UserReward {
+  id       String @id @default(cuid())
+  userId   String
+  rewardId String
+  
+  claimed   Boolean @default(false)
+  claimedAt DateTime?
+  
+  createdAt DateTime @default(now())
+  
+  // Relations
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reward Reward @relation(fields: [rewardId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, rewardId])
+  @@map("user_rewards")
+}
+
+model Order {
+  id     String @id @default(cuid())
+  userId String
+  
+  items       Json
+  totalAmount Int
+  status      OrderStatus @default(PENDING)
+  
+  shippingAddress Json?
+  paymentMethod   String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("orders")
+}
+
+// Enums
+enum Role {
+  USER
+  ADMIN
+  MODERATOR
+}
+
+enum TeamRole {
+  LEADER
+  MEMBER
+}
+
+enum TournamentFormat {
+  SINGLE_ELIMINATION
+  DOUBLE_ELIMINATION
+  ROUND_ROBIN
+  SWISS
+}
+
+enum TournamentStatus {
+  UPCOMING
+  REGISTRATION_OPEN
+  REGISTRATION_CLOSED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum MatchStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  ENTRY_FEE
+  PRIZE_PAYOUT
+  PURCHASE
+  REFUND
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum NotificationType {
+  TOURNAMENT
+  MATCH
+  TEAM
+  SYSTEM
+  REWARD
+  TRANSACTION
+}
+
+enum RewardType {
+  COINS
+  EXPERIENCE
+  BADGE
+  ITEM
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}

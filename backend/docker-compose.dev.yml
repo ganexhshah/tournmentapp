@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres-dev:
+    image: postgres:15-alpine
+    container_name: crackzone-postgres-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: crackzone_db
+      POSTGRES_USER: crackzone_user
+      POSTGRES_PASSWORD: crackzone_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    networks:
+      - crackzone-dev-network
+
+  # Redis Cache
+  redis-dev:
+    image: redis:7-alpine
+    container_name: crackzone-redis-dev
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_dev_data:/data
+    networks:
+      - crackzone-dev-network
+
+volumes:
+  postgres_dev_data:
+    driver: local
+  redis_dev_data:
+    driver: local
+
+networks:
+  crackzone-dev-network:
+    driver: bridge

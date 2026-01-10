@@ -1,0 +1,134 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: crackzone-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: crackzone_db
+      POSTGRES_USER: crackzone_user
+      POSTGRES_PASSWORD: crackzone_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      - crackzone-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: crackzone-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass redis_password
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - crackzone-network
+
+  # Backend API
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: crackzone-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://crackzone_user:crackzone_password@postgres:5432/crackzone_db
+      REDIS_URL: redis://redis:6379
+      REDIS_PASSWORD: redis_password
+      JWT_SECRET: your-super-secret-jwt-key-here-change-in-production
+      JWT_REFRESH_SECRET: your-refresh-secret-here-change-in-production
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./uploads:/app/uploads
+    networks:
+      - crackzone-network
+
+  # Nginx Load Balancer
+  nginx:
+    image: nginx:alpine
+    container_name: crackzone-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/ssl:/etc/nginx/ssl
+      - ./nginx/logs:/var/log/nginx
+    depends_on:
+      - backend
+    networks:
+      - crackzone-network
+
+  # Backend API (Additional instances for load balancing)
+  backend-2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: crackzone-backend-2
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://crackzone_user:crackzone_password@postgres:5432/crackzone_db
+      REDIS_URL: redis://redis:6379
+      REDIS_PASSWORD: redis_password
+      JWT_SECRET: your-super-secret-jwt-key-here-change-in-production
+      JWT_REFRESH_SECRET: your-refresh-secret-here-change-in-production
+      PORT: 3000
+    expose:
+      - "3000"
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./uploads:/app/uploads
+    networks:
+      - crackzone-network
+
+  backend-3:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: crackzone-backend-3
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://crackzone_user:crackzone_password@postgres:5432/crackzone_db
+      REDIS_URL: redis://redis:6379
+      REDIS_PASSWORD: redis_password
+      JWT_SECRET: your-super-secret-jwt-key-here-change-in-production
+      JWT_REFRESH_SECRET: your-refresh-secret-here-change-in-production
+      PORT: 3000
+    expose:
+      - "3000"
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./uploads:/app/uploads
+    networks:
+      - crackzone-network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  crackzone-network:
+    driver: bridge
