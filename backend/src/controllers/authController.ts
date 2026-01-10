@@ -51,7 +51,6 @@ export const register = async (req: Request, res: Response) => {
 
   // Generate 6-digit OTP instead of UUID token
   const verificationOTP = Math.floor(100000 + Math.random() * 900000).toString();
-  console.log('🔢 Generated OTP:', verificationOTP);
 
   // Create user
   const user = await prisma.user.create({
@@ -86,11 +85,6 @@ export const register = async (req: Request, res: Response) => {
 
   // Store verification OTP in cache (expires in 30 minutes for testing)
   await cache.set(`verification:${verificationOTP}`, user.id, 1800); // 30 minutes
-  console.log('💾 Stored OTP in cache with key:', `verification:${verificationOTP}`);
-  
-  // Test cache immediately
-  const testRetrieve = await cache.get(`verification:${verificationOTP}`);
-  console.log('🧪 Test cache retrieve:', testRetrieve);
 
   // Send verification email
   try {
@@ -310,21 +304,16 @@ export const getProfile = async (req: AuthRequest, res: Response) => {
 };
 
 export const verifyEmail = async (req: Request, res: Response) => {
-  console.log('🔍 Verify email request:', req.body);
   const { token } = req.body;
 
   if (!token) {
-    console.log('❌ No token provided');
     throw createError('Verification token required', 400);
   }
 
-  console.log('🔑 Looking for token in cache:', token);
   // Get user ID from cache
   const userId = await cache.get(`verification:${token}`);
-  console.log('👤 Found user ID:', userId);
   
   if (!userId) {
-    console.log('❌ Token not found in cache or expired');
     throw createError('Invalid or expired verification token', 400);
   }
 

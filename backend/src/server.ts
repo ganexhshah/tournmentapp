@@ -61,19 +61,6 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Debug endpoint to check cache (development only)
-if (process.env.NODE_ENV === 'development') {
-  app.get('/debug/cache/:key', async (req, res) => {
-    try {
-      const { cache } = await import('./config/redis');
-      const value = await cache.get(req.params.key);
-      res.json({ key: req.params.key, value });
-    } catch (error) {
-      res.status(500).json({ error: error.message });
-    }
-  });
-}
-
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
