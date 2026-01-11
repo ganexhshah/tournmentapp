@@ -29,6 +29,11 @@ model User {
   experience  Int     @default(0)
   coins       Int     @default(0)
   
+  // Profile setup status
+  profileSetup    Boolean @default(false)
+  gameSetup       Boolean @default(false)
+  onboardingComplete Boolean @default(false)
+  
   // Timestamps
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -36,6 +41,7 @@ model User {
   
   // Relations
   profile       UserProfile?
+  gameProfiles  GameProfile[]
   teams         TeamMember[]
   tournaments   TournamentParticipant[]
   matches       MatchParticipant[]
@@ -62,6 +68,24 @@ model UserProfile {
   updatedAt DateTime @updatedAt
   
   @@map("user_profiles")
+}
+
+model GameProfile {
+  id       String @id @default(cuid())
+  userId   String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  gameId      String
+  gameName    String
+  gameUID     String
+  inGameName  String
+  isPrimary   Boolean @default(false)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([userId, gameId])
+  @@map("game_profiles")
 }
 
 model Team {

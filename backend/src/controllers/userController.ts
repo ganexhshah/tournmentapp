@@ -10,6 +10,75 @@ import {
   validateImageFile, 
   extractPublicId 
 } from '../services/imageService';
+import bcrypt from 'bcryptjs';
+
+export const createUser = async (req: Request, res: Response) => {
+  const { email, username, password, firstName, lastName, gamerTag, role = 'USER' } = req.body;
+
+  // Check if user already exists
+  const existingUser = await prisma.user.findFirst({
+    where: {
+      OR: [
+        { email },
+        { username },
+        ...(gamerTag ? [{ gamerTag }] : [])
+      ]
+    }
+  });
+
+  if (existingUser) {
+    if (existingUser.email === email) {
+      throw createError('Email already registered', 409);
+    }
+    if (existingUser.username === username) {
+      throw createError('Username already taken', 409);
+    }
+    if (gamerTag && existingUser.gamerTag === gamerTag) {
+      throw createError('Gamer tag already taken', 409);
+    }
+  }
+
+  // Hash password
+  const hashedPassword = await bcrypt.hash(password, 12);
+
+  // Create user
+  const user = await prisma.user.create({
+    data: {
+      email,
+      username,
+      password: hashedPassword,
+      firstName,
+      lastName,
+      gamerTag,
+      role,
+      isVerified: true, // Admin created users are auto-verified
+      profile: {
+        create: {}
+      }
+    },
+    select: {
+      id: true,
+      email: true,
+      username: true,
+      firstName: true,
+      lastName: true,
+      avatar: true,
+      gamerTag: true,
+      level: true,
+      experience: true,
+      coins: true,
+      role: true,
+      isActive: true,
+      isVerified: true,
+      createdAt: true
+    }
+  });
+
+  res.status(201).json({
+    message: 'User created successfully',
+    user
+  });
+};
 
 export const getUsers = async (req: Request, res: Response) => {
   const page = parseInt(req.query.page as string) || 1;
@@ -20,15 +89,15 @@ export const getUsers = async (req: Request, res: Response) => {
 
   const skip = (page - 1) * limit;
 
-  const where: any = {
-    isActive: true
-  };
+  const where: any = {};
 
   if (search) {
     where.OR = [
       { username: { contains: search, mode: 'insensitive' } },
       { firstName: { contains: search, mode: 'insensitive' } },
-      { lastName: { contains: search, mode: 'insensitive' } }
+      { lastName: { contains: search, mode: 'insensitive' } },
+      { email: { contains: search, mode: 'insensitive' } },
+      { gamerTag: { contains: search, mode: 'insensitive' } }
     ];
   }
 
@@ -40,11 +109,91 @@ export const getUsers = async (req: Request, res: Response) => {
         username: true,
         firstName: true,
         lastName: true,
+        email: true,
+        phone: true,
         avatar: true,
         gamerTag: true,
         level: true,
         experience: true,
-        createdAt: true
+        coins: true,
+        role: true,
+        isActive: true,
+        isVerified: true,
+        createdAt: true,
+        updatedAt: true,
+        lastLogin: true,
+        profile: {
+          select: {
+            bio: true,
+            country: true,
+            timezone: true,
+            dateOfBirth: true
+          }
+        },
+        _count: {
+          select: {
+            teams: true,
+            tournaments: true,
+            matches: true,
+            transactions: true,
+            orders: true
+          }
+        },
+        teams: {
+          select: {
+            id: true,
+            role: true,
+            joinedAt: true,
+            team: {
+              select: {
+                id: true,
+                name: true,
+                avatar: true
+              }
+            }
+          },
+          take: 5
+        },
+        tournaments: {
+          select: {
+            id: true,
+            registeredAt: true,
+            tournament: {
+              select: {
+                id: true,
+                title: true,
+                game: true,
+                status: true
+              }
+            }
+          },
+          take: 5,
+          orderBy: {
+            registeredAt: 'desc'
+          }
+        },
+        matches: {
+          select: {
+            id: true,
+            score: true,
+            position: true,
+            match: {
+              select: {
+                id: true,
+                title: true,
+                game: true,
+                status: true,
+                scheduledAt: true
+              }
+            }
+          },
+          take: 5,
+          orderBy: {
+            match: {
+              scheduledAt: 'desc'
+            }
+          }
+        }
       },
       orderBy: { [sortBy]: sortOrder },
       skip,
@@ -83,26 +232,155 @@ export const getUserById = async (req: Request, res: Response) => {
         username: true,
         firstName: true,
         lastName: true,
+        email: true,
+        phone: true,
         avatar: true,
         gamerTag: true,
         level: true,
         experience: true,
         coins: true,
+        role: true,
+        isActive: true,
         isVerified: true,
         createdAt: true,
+        updatedAt: true,
+        lastLogin: true,
         profile: {
           select: {
             bio: true,
             country: true,
-            timezone: true
+            timezone: true,
+            dateOfBirth: true,
+            preferences: true
           }
         },
         _count: {
           select: {
             teams: true,
             tournaments: true,
-            matches: true
+            matches: true,
+            transactions: true,
+            notifications: true,
+            rewards: true,
+            orders: true
           }
+        },
+        teams: {
+          select: {
+            id: true,
+            role: true,
+            joinedAt: true,
+            team: {
+              select: {
+                id: true,
+                name: true,
+                description: true,
+                avatar: true,
+                maxMembers: true,
+                _count: {
+                  select: {
+                    members: true
+                  }
+                }
+              }
+            }
+          }
+        },
+        tournaments: {
+          select: {
+            id: true,
+            registeredAt: true,
+            tournament: {
+              select: {
+                id: true,
+                title: true,
+                description: true,
+                game: true,
+                format: true,
+                status: true,
+                maxParticipants: true,
+                entryFee: true,
+                prizePool: true,
+                startDate: true,
+                endDate: true
+              }
+            }
+          },
+          orderBy: {
+            registeredAt: 'desc'
+          }
+        },
+        matches: {
+          select: {
+            id: true,
+            score: true,
+            position: true,
+            match: {
+              select: {
+                id: true,
+                title: true,
+                game: true,
+                status: true,
+                round: true,
+                scheduledAt: true,
+                startedAt: true,
+                endedAt: true,
+                result: true
+              }
+            }
+          },
+          orderBy: {
+            match: {
+              scheduledAt: 'desc'
+            }
+          }
+        },
+        transactions: {
+          select: {
+            id: true,
+            type: true,
+            amount: true,
+            description: true,
+            status: true,
+            createdAt: true
+          },
+          orderBy: {
+            createdAt: 'desc'
+          },
+          take: 10
+        },
+        rewards: {
+          select: {
+            id: true,
+            claimed: true,
+            claimedAt: true,
+            createdAt: true,
+            reward: {
+              select: {
+                id: true,
+                title: true,
+                description: true,
+                type: true,
+                value: true
+              }
+            }
+          },
+          orderBy: {
+            createdAt: 'desc'
+          }
+        },
+        orders: {
+          select: {
+            id: true,
+            items: true,
+            totalAmount: true,
+            status: true,
+            createdAt: true
+          },
+          orderBy: {
+            createdAt: 'desc'
+          },
+          take: 5
         }
       }
     });

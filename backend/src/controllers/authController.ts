@@ -78,6 +78,9 @@ export const register = async (req: Request, res: Response) => {
       role: true,
       isActive: true,
       isVerified: true,
+      profileSetup: true,
+      gameSetup: true,
+      onboardingComplete: true,
       createdAt: true,
       updatedAt: true
     }
@@ -158,6 +161,9 @@ export const login = async (req: Request, res: Response) => {
       role: true,
       isActive: true,
       isVerified: true,
+      profileSetup: true,
+      gameSetup: true,
+      onboardingComplete: true,
       createdAt: true,
       updatedAt: true,
       lastLogin: true
@@ -202,6 +208,9 @@ export const login = async (req: Request, res: Response) => {
     role: user.role,
     isActive: user.isActive,
     isVerified: user.isVerified,
+    profileSetup: user.profileSetup,
+    gameSetup: user.gameSetup,
+    onboardingComplete: user.onboardingComplete,
     createdAt: user.createdAt.toISOString(),
     updatedAt: user.updatedAt.toISOString(),
     lastLogin: user.lastLogin?.toISOString()

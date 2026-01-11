@@ -15,6 +15,7 @@ import { rateLimiter } from './middleware/rateLimiter';
 // Routes
 import authRoutes from './routes/auth';
 import userRoutes from './routes/users';
+import profileRoutes from './routes/profile';
 import tournamentRoutes from './routes/tournaments';
 import teamRoutes from './routes/teams';
 import matchRoutes from './routes/matches';
@@ -43,7 +44,7 @@ app.use(helmet());
 app.use(compression());
 app.use(morgan('combined'));
 app.use(cors({
-  origin: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:8081', 'http://localhost:3000'],
+  origin: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:8081', 'http://localhost:3000', 'http://localhost:3001'],
   credentials: true
 }));
 app.use(express.json({ limit: '10mb' }));
@@ -64,6 +65,7 @@ app.get('/health', (req, res) => {
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/profile', profileRoutes);
 app.use('/api/tournaments', tournamentRoutes);
 app.use('/api/teams', teamRoutes);
 app.use('/api/matches', matchRoutes);

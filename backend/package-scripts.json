@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "migrate:profile": "node scripts/migrate-profile-setup.js",
+    "db:generate": "npx prisma generate",
+    "db:push": "npx prisma db push",
+    "db:studio": "npx prisma studio"
+  }
+}

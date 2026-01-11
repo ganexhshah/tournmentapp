@@ -1,6 +1,6 @@
 import express from 'express';
 import { authenticate, authorize } from '../middleware/auth';
-import { updateProfileValidation, idValidation, paginationValidation } from '../middleware/validation';
+import { updateProfileValidation, idValidation, paginationValidation, registerValidation } from '../middleware/validation';
 import { uploadRateLimiter } from '../middleware/rateLimiter';
 import { asyncHandler } from '../middleware/errorHandler';
 import { upload } from '../services/imageService';
@@ -20,6 +20,7 @@ router.post('/upload-avatar', uploadRateLimiter, upload.single('avatar'), asyncH
 router.delete('/avatar', asyncHandler(userController.deleteAvatar));
 
 // Admin only routes
+router.post('/', authorize('ADMIN'), registerValidation, asyncHandler(userController.createUser));
 router.put('/:id', authorize('ADMIN'), idValidation, asyncHandler(userController.updateUser));
 router.delete('/:id', authorize('ADMIN'), idValidation, asyncHandler(userController.deleteUser));
 router.post('/:id/ban', authorize('ADMIN', 'MODERATOR'), idValidation, asyncHandler(userController.banUser));
