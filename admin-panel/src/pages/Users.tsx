@@ -79,6 +79,46 @@ export default function Users() {
     }
   }
 
+  const handleDeleteUser = async (userId: string, username: string) => {
+    const deleteType = confirm(
+      `Choose deletion type for user "${username}":\n\n` +
+      `Click OK for SOFT DELETE (deactivate user - can be restored)\n` +
+      `Click Cancel to choose PERMANENT DELETE (cannot be undone)`
+    );
+
+    let permanent = false;
+    
+    if (!deleteType) {
+      // User clicked Cancel, ask for permanent delete confirmation
+      permanent = confirm(
+        `⚠️ PERMANENT DELETE WARNING ⚠️\n\n` +
+        `This will PERMANENTLY delete user "${username}" and ALL their data including:\n` +
+        `• Profile information\n` +
+        `• Tournament history\n` +
+        `• Match records\n` +
+        `• Transactions\n` +
+        `• Teams and memberships\n\n` +
+        `This action CANNOT be undone!\n\n` +
+        `Are you absolutely sure you want to permanently delete this user?`
+      );
+      
+      if (!permanent) return; // User cancelled permanent delete
+    }
+    
+    try {
+      await userService.deleteUser(userId, permanent);
+      
+      loadUsers();
+      alert(permanent 
+        ? 'User permanently deleted successfully!' 
+        : 'User deactivated successfully!'
+      );
+    } catch (error: any) {
+      console.error('Error deleting user:', error);
+      alert(error.response?.data?.message || 'Failed to delete user');
+    }
+  }
+
   const handleAddUser = async (userData: any) => {
     try {
       setModalLoading(true)
@@ -353,6 +393,15 @@ export default function Users() {
                           <UserCheck className="h-4 w-4" />
                         </button>
                       )}
+                      <div className="relative group">
+                        <button 
+                          onClick={() => handleDeleteUser(user.id, user.username)}
+                          className="text-red-700 hover:text-red-900 p-1 rounded hover:bg-red-50"
+                          title="Delete User"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
                     </div>
                   </td>
                 </tr>

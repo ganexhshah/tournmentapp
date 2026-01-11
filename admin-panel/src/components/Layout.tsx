@@ -10,7 +10,8 @@ import {
   Menu,
   X,
   LogOut,
-  User
+  User,
+  Image
 } from 'lucide-react'
 
 const navigation = [
@@ -19,6 +20,7 @@ const navigation = [
   { name: 'Tournaments', href: '/tournaments', icon: Trophy },
   { name: 'Teams', href: '/teams', icon: Users2 },
   { name: 'Matches', href: '/matches', icon: Gamepad2 },
+  { name: 'Banners', href: '/banners', icon: Image },
 ]
 
 export default function Layout({ children }: { children: React.ReactNode }) {

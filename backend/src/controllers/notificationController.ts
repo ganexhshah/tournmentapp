@@ -46,17 +46,25 @@ export const getNotifications = async (req: AuthRequest, res: Response) => {
   });
 };
 
-export const getUnreadCount = async (req: AuthRequest, res: Response) => {
+export const getNotificationCounts = async (req: AuthRequest, res: Response) => {
   const userId = req.user.id;
 
-  const count = await prisma.notification.count({
-    where: {
-      userId,
-      isRead: false
-    }
-  });
+  const [unreadCount, totalCount] = await Promise.all([
+    prisma.notification.count({
+      where: {
+        userId,
+        isRead: false
+      }
+    }),
+    prisma.notification.count({
+      where: { userId }
+    })
+  ]);
 
-  res.json({ unreadCount: count });
+  res.json({
+    unreadCount,
+    totalCount
+  });
 };
 
 export const markAsRead = async (req: AuthRequest, res: Response) => {

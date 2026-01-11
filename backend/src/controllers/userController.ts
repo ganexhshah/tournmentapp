@@ -12,6 +12,56 @@ import {
 } from '../services/imageService';
 import bcrypt from 'bcryptjs';
 
+export const getCurrentUser = async (req: AuthRequest, res: Response) => {
+  const userId = req.user.id;
+
+  try {
+    // Try to get from cache first
+    const cacheKey = `user:${userId}`;
+    let user = await cache.get(cacheKey);
+
+    if (!user) {
+      user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          username: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          avatar: true,
+          gamerTag: true,
+          level: true,
+          experience: true,
+          coins: true,
+          role: true,
+          isActive: true,
+          isVerified: true,
+          createdAt: true,
+          profile: {
+            select: {
+              bio: true,
+              country: true,
+              timezone: true
+            }
+          }
+        }
+      });
+
+      if (!user) {
+        throw createError('User not found', 404);
+      }
+
+      // Cache for 1 hour
+      await cache.set(cacheKey, user, 3600);
+    }
+
+    res.json({ user });
+  } catch (error) {
+    throw createError('Failed to get current user', 500);
+  }
+};
+
 export const createUser = async (req: Request, res: Response) => {
   const { email, username, password, firstName, lastName, gamerTag, role = 'USER' } = req.body;
 
@@ -570,18 +620,50 @@ export const updateUser = async (req: Request, res: Response) => {
 
 export const deleteUser = async (req: Request, res: Response) => {
   const { id } = req.params;
+  const { permanent } = req.query; // Optional query parameter for permanent deletion
 
-  // Soft delete by deactivating the user
-  await prisma.user.update({
-    where: { id },
-    data: { isActive: false }
-  });
+  try {
+    if (permanent === 'true') {
+      // Hard delete - permanently remove user and all related data
+      await prisma.$transaction(async (tx) => {
+        // Delete related data first (due to foreign key constraints)
+        await tx.notification.deleteMany({ where: { userId: id } });
+        await tx.transaction.deleteMany({ where: { userId: id } });
+        await tx.userReward.deleteMany({ where: { userId: id } });
+        await tx.order.deleteMany({ where: { userId: id } });
+        await tx.teamMember.deleteMany({ where: { userId: id } });
+        await tx.tournamentParticipant.deleteMany({ where: { userId: id } });
+        await tx.matchParticipant.deleteMany({ where: { userId: id } });
+        await tx.gameProfile.deleteMany({ where: { userId: id } });
+        await tx.userProfile.deleteMany({ where: { userId: id } });
+        
+        // Finally delete the user
+        await tx.user.delete({ where: { id } });
+      });
+    } else {
+      // Soft delete - just deactivate the user
+      await prisma.user.update({
+        where: { id },
+        data: { 
+          isActive: false,
+          updatedAt: new Date()
+        }
+      });
+    }
 
-  // Clear cache
-  await cache.del(`user:${id}`);
-  await cache.del(`user:profile:${id}`);
+    // Clear cache
+    await cache.del(`user:${id}`);
+    await cache.del(`user:profile:${id}`);
 
-  res.json({ message: 'User deleted successfully' });
+    res.json({ 
+      message: permanent === 'true' 
+        ? 'User permanently deleted successfully' 
+        : 'User deactivated successfully' 
+    });
+  } catch (error) {
+    console.error('Delete user error:', error);
+    throw createError('Failed to delete user', 500);
+  }
 };
 
 export const banUser = async (req: Request, res: Response) => {

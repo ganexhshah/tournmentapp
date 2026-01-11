@@ -68,9 +68,9 @@ export const getAvailableGames = async (req: Request, res: Response) => {
     {
       id: 'freefire',
       name: 'Free Fire',
-      description: 'Battle Royale Game',
+      description: 'Battle Royale Survival Game',
       color: '#FF6B35',
-      icon: 'flame',
+      icon: 'flame-outline',
       isActive: true
     },
     {
@@ -78,7 +78,7 @@ export const getAvailableGames = async (req: Request, res: Response) => {
       name: 'PUBG Mobile',
       description: 'Battle Royale Game',
       color: '#FF8C42',
-      icon: 'rifle',
+      icon: 'game-controller-outline',
       isActive: true
     },
     {
@@ -86,15 +86,79 @@ export const getAvailableGames = async (req: Request, res: Response) => {
       name: 'Call of Duty Mobile',
       description: 'FPS Battle Royale',
       color: '#FFB366',
-      icon: 'skull',
+      icon: 'skull-outline',
       isActive: true
     },
     {
       id: 'valorant',
       name: 'Valorant Mobile',
       description: 'Tactical FPS',
-      color: '#FFCC99',
-      icon: 'flash',
+      color: '#E74C3C',
+      icon: 'flash-outline',
+      isActive: true
+    },
+    {
+      id: 'apex',
+      name: 'Apex Legends Mobile',
+      description: 'Hero-based Battle Royale',
+      color: '#F39C12',
+      icon: 'shield-outline',
+      isActive: true
+    },
+    {
+      id: 'mlbb',
+      name: 'Mobile Legends',
+      description: 'MOBA Strategy Game',
+      color: '#3498DB',
+      icon: 'sword-outline',
+      isActive: true
+    },
+    {
+      id: 'lol',
+      name: 'League of Legends: Wild Rift',
+      description: 'MOBA Strategy Game',
+      color: '#9B59B6',
+      icon: 'diamond-outline',
+      isActive: true
+    },
+    {
+      id: 'csgo',
+      name: 'CS:GO Mobile',
+      description: 'Tactical FPS',
+      color: '#2ECC71',
+      icon: 'telescope-outline',
+      isActive: true
+    },
+    {
+      id: 'fortnite',
+      name: 'Fortnite Mobile',
+      description: 'Battle Royale Building Game',
+      color: '#8E44AD',
+      icon: 'construct-outline',
+      isActive: true
+    },
+    {
+      id: 'clash-royale',
+      name: 'Clash Royale',
+      description: 'Real-time Strategy',
+      color: '#1ABC9C',
+      icon: 'trophy-outline',
+      isActive: true
+    },
+    {
+      id: 'brawl-stars',
+      name: 'Brawl Stars',
+      description: 'Multiplayer Battle Arena',
+      color: '#F1C40F',
+      icon: 'star-outline',
+      isActive: true
+    },
+    {
+      id: 'among-us',
+      name: 'Among Us',
+      description: 'Social Deduction Game',
+      color: '#E67E22',
+      icon: 'people-outline',
       isActive: true
     }
   ];

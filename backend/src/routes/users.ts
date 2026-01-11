@@ -15,6 +15,7 @@ router.get('/:id', idValidation, asyncHandler(userController.getUserById));
 // Protected routes
 router.use(authenticate);
 
+router.get('/me', asyncHandler(userController.getCurrentUser));
 router.put('/profile', updateProfileValidation, asyncHandler(userController.updateProfile));
 router.post('/upload-avatar', uploadRateLimiter, upload.single('avatar'), asyncHandler(userController.uploadAvatar));
 router.delete('/avatar', asyncHandler(userController.deleteAvatar));

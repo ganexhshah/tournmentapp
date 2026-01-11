@@ -15,6 +15,7 @@ router.use(authenticate);
 
 router.get('/user/available', asyncHandler(rewardController.getAvailableRewards));
 router.get('/user/claimed', paginationValidation, asyncHandler(rewardController.getClaimedRewards));
+router.get('/user/count', asyncHandler(rewardController.getRewardCounts));
 router.post('/:id/claim', idValidation, asyncHandler(rewardController.claimReward));
 
 // Admin routes

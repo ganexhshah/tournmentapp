@@ -317,6 +317,29 @@ model Order {
   @@map("orders")
 }
 
+model Banner {
+  id          String @id @default(cuid())
+  title       String
+  subtitle    String?
+  description String?
+  imageUrl    String
+  publicId    String?
+  
+  actionText  String?
+  actionUrl   String?
+  
+  isActive    Boolean @default(true)
+  priority    Int     @default(0)
+  
+  startDate   DateTime?
+  endDate     DateTime?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("banners")
+}
+
 // Enums
 enum Role {
   USER

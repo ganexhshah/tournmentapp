@@ -262,6 +262,35 @@ export const claimReward = async (req: AuthRequest, res: Response) => {
   res.json({ message: 'Reward claimed successfully' });
 };
 
+export const getRewardCounts = async (req: AuthRequest, res: Response) => {
+  const userId = req.user.id;
+
+  const [unclaimedCount, totalCount] = await Promise.all([
+    // Count available rewards user hasn't claimed
+    prisma.reward.count({
+      where: {
+        isActive: true,
+        NOT: {
+          userRewards: {
+            some: {
+              userId
+            }
+          }
+        }
+      }
+    }),
+    // Count total rewards user has claimed
+    prisma.userReward.count({
+      where: { userId }
+    })
+  ]);
+
+  res.json({
+    unclaimedCount,
+    totalCount
+  });
+};
+
 export const createReward = async (req: Request, res: Response) => {
   const {
     title,

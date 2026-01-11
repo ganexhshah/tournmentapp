@@ -25,6 +25,7 @@ import rewardRoutes from './routes/rewards';
 import orderRoutes from './routes/orders';
 import imageRoutes from './routes/images';
 import emailRoutes from './routes/email';
+import bannerRoutes from './routes/banners';
 
 dotenv.config();
 
@@ -75,6 +76,7 @@ app.use('/api/rewards', rewardRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/images', imageRoutes);
 app.use('/api/email', emailRoutes);
+app.use('/api/banners', bannerRoutes);
 
 // Error handling
 app.use(notFound);

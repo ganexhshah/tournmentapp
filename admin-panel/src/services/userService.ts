@@ -169,9 +169,10 @@ export const userService = {
     return response.data
   },
 
-  async deleteUser(id: string): Promise<{ message: string }> {
-    const response = await api.delete(`/users/${id}`)
-    return response.data
+  async deleteUser(id: string, permanent: boolean = false): Promise<{ message: string }> {
+    const url = permanent ? `/users/${id}?permanent=true` : `/users/${id}`;
+    const response = await api.delete(url);
+    return response.data;
   },
 
   async banUser(id: string, reason?: string): Promise<{ message: string }> {

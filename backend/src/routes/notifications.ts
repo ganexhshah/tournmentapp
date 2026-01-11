@@ -10,7 +10,7 @@ const router = express.Router();
 router.use(authenticate);
 
 router.get('/', paginationValidation, asyncHandler(notificationController.getNotifications));
-router.get('/unread-count', asyncHandler(notificationController.getUnreadCount));
+router.get('/count', asyncHandler(notificationController.getNotificationCounts));
 router.post('/:id/read', idValidation, asyncHandler(notificationController.markAsRead));
 router.post('/read-all', asyncHandler(notificationController.markAllAsRead));
 router.delete('/:id', idValidation, asyncHandler(notificationController.deleteNotification));

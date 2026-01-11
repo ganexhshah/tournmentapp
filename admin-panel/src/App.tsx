@@ -7,6 +7,7 @@ import Users from './pages/Users'
 import Tournaments from './pages/Tournaments'
 import Teams from './pages/Teams'
 import Matches from './pages/Matches'
+import Banners from './pages/Banners'
 import Layout from './components/Layout'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -41,6 +42,7 @@ function App() {
                     <Route path="/tournaments" element={<Tournaments />} />
                     <Route path="/teams" element={<Teams />} />
                     <Route path="/matches" element={<Matches />} />
+                    <Route path="/banners" element={<Banners />} />
                   </Routes>
                 </Layout>
               </ProtectedRoute>
